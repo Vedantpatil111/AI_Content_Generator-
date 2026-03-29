@@ -1,0 +1,71 @@
+import os
+from dotenv import load_dotenv
+from openai import OpenAI
+import streamlit as st
+
+# Load environment variables
+load_dotenv()
+
+# Initialize OpenAI client
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
+# Streamlit UI
+st.set_page_config(page_title="AI Content Generator", page_icon="🤖")
+
+st.title("🤖 AI Content Generator")
+st.write("Generate LinkedIn posts and Blogs using AI")
+
+# User Inputs
+topic = st.text_input("Enter Topic")
+tone = st.selectbox("Select Tone", ["Professional", "Friendly", "Casual"])
+content_type = st.selectbox("Content Type", ["LinkedIn", "Blog"])
+
+# Generate Button
+if st.button("Generate Content"):
+
+    if topic.strip() == "":
+        st.warning("Please enter a topic")
+    else:
+        # Prompt creation
+        if content_type == "Blog":
+            prompt = f"""
+            Write a detailed blog on {topic}.
+            Include:
+            - Catchy Title
+            - Introduction
+            - Headings and subheadings
+            - Conclusion
+            - SEO keywords
+            """
+        else:
+            prompt = f"""
+            Write a {tone} LinkedIn post on {topic}.
+            Include:
+            - Strong hook
+            - Key points
+            - Conclusion
+            - Relevant hashtags
+            """
+
+        try:
+            # API Call
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}]
+            )
+
+            content = response.choices[0].message.content
+
+            st.subheader("Generated Content:")
+            st.write(content)
+
+            # Download button
+            st.download_button(
+                label="Download Content",
+                data=content,
+                file_name="generated_content.txt",
+                mime="text/plain"
+            )
+
+        except Exception as e:
+            st.error(f"Error: {e}")
